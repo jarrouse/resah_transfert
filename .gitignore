@@ -1,6 +1,6 @@
 # Tooling
 
-node_modules
+node_modules/
 
 # Application
 web/app/plugins/*

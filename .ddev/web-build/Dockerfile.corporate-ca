@@ -1,0 +1,3 @@
+COPY ./root.crt /usr/local/share/ca-certificates/corporate-ca.crt
+
+RUN update-ca-certificates
