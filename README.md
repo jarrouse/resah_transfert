@@ -57,11 +57,21 @@ An intermediate docker image is used to provision the self sign certificate used
 
 ### Pages
 
-Example `node --env-file=.env --use-system-ca provision.page.js migrations/pages/index.json`
+Example 
+
+``` bash
+node --env-file=.env --use-system-ca provision.page.js migrations/pages/index.json
+```
 
 ### Categories
 
-Example `node --env-file=.env --use-system-ca provision.category.js migrations/categories`
+Example 
+
+``` bash
+node --env-file=./.env --use-system-ca provision.page.js migrations/pages 2066
+```
+
+> The last parameter is optional, when it is set the tool will only migrate the corresponding page
 
 ## Useful commands
 
