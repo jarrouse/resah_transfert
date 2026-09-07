@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "efd1bc8d9fb8a3ba938d92ccb9f7c29a",
+    "content-hash": "bc812c215173da9217b5efee6cd849aa",
     "packages": [
         {
             "name": "composer/installers",
@@ -1040,6 +1040,63 @@
                 }
             ],
             "time": "2026-08-24T18:07:49+00:00"
+        },
+        {
+            "name": "wp-plugin/elementor",
+            "version": "3.35.9",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/elementor/",
+                "reference": "tags/3.35.9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/elementor.3.35.9.zip"
+            },
+            "require": {
+                "composer/installers": "~1.0|~2.0"
+            },
+            "type": "wordpress-plugin",
+            "notification-url": "https://wp-packages.org/downloads",
+            "authors": [
+                {
+                    "name": "Elementor"
+                }
+            ],
+            "description": "The Elementor Website Builder has it all: drag and drop page builder, Atomic Editor, pixel perfect design, global and reusable style systems, mobile r …",
+            "homepage": "https://elementor.com/?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash",
+            "support": {
+                "changelog": "https://wordpress.org/plugins/elementor/#developers",
+                "issues": "https://wordpress.org/support/plugin/elementor",
+                "source": "https://plugins.svn.wordpress.org/elementor"
+            },
+            "time": "2026-09-01T12:01:47+00:00"
+        },
+        {
+            "name": "wp-theme/astra",
+            "version": "4.13.10",
+            "source": {
+                "type": "svn",
+                "url": "https://themes.svn.wordpress.org/astra/",
+                "reference": "4.13.10"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/theme/astra.4.13.10.zip"
+            },
+            "require": {
+                "composer/installers": "~1.0|~2.0"
+            },
+            "type": "wordpress-theme",
+            "notification-url": "https://wp-packages.org/downloads",
+            "description": "The Astra WordPress theme is lightning-fast and highly customizable. It has over 1 million downloads and the only theme in the world with 6,000+ five-star reviews! It’s ideal for professional web designers, solopreneurs, small businesses, eCommerce, membership sites and any type of website. It offers special features and templates so it works perfectly with all page builders like Spectra, Elementor, Beaver Builder, etc. Fast performance, clean code, mobile-first design and schema markup are all built-in, making the theme exceptionally SEO-friendly. It’s fully compatible with WooCommerce, SureCart and other eCommerce plugins and comes with lots of store-friendly features and templates. Astra also provides expert support for free users. A dedicated team of fully trained WordPress experts are on hand to help with every aspect of the theme. Try the live demo of Astra: https://zipwp.org/themes/astra/",
+            "homepage": "https://wordpress.org/themes/astra/",
+            "support": {
+                "changelog": "https://wordpress.org/themes/astra/#developers",
+                "issues": "https://wordpress.org/support/theme/astra",
+                "source": "https://themes.svn.wordpress.org/astra"
+            },
+            "time": "2026-08-19T05:36:15+00:00"
         },
         {
             "name": "wp-theme/twentytwentyfive",

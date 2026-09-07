@@ -1,6 +1,6 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 const ROOT = process.argv[2] ?? path.join(__dirname);
@@ -25,15 +25,14 @@ app.get(/.*\.css$/, async (req, res, next) => {
 
 });
 
-console.log(INDEX_PATH)
-
 if(INDEX_PATH != null){
+    const inedxContent = await fs.promises.readFile(INDEX_PATH, 'utf8');
+
     app.get("/index.html", async (req,res,next) => {
         try {
-            const content = await fs.promises.readFile(INDEX_PATH, 'utf8');
 
             res.setHeaders(new Headers({ 'Content-Type': 'text/html'}));
-            res.send(content);
+            res.send(inedxContent);
         } catch (err) { 
             console.log(err)
             next();
