@@ -45,13 +45,19 @@ See the [Bedrock installation documentation](https://roots.io/bedrock/docs/insta
 
 ### Steps
 
-Please follow the steps in ddev installation [guide](https://ddev.com/get-started/)
+Please follow the steps in ddev installation [guide](https://ddev.com/get-started/) and then 
 
-> It's important to run `ddev composer install`
+1. Execute `ddev composer install`
+3. Start your local Wordpress server (refer to this [section](#wordpress-dev-serveur))
+4. Open the Wordpress website (refer to this [section](wordpress-dev-serveur)) and configure your user
+5. Open the profile page, scroll to the bottom and create an application password
+2. Set your credentials in .env file, follow .env.example. \
+Use the password generated at previous step
+
 
 ### Certificate issues 
 
-An intermediate docker image is used to provision the self sign certificate used by the company. Without it ddev fails to pull the dependencies.
+> An intermediate docker image is used to provision the self sign certificate used by the company. Without it ddev fails to pull the dependencies.
 
 ## Provision
 
@@ -85,7 +91,15 @@ node --env-file=./.env --use-system-ca provision.page.js migrations/pages 2066
 
 #### Wordpress dev serveur
 
-To start a wordpress dev server `ddev start`
+To start a wordpress dev server 
+``` bash
+ddev start
+```
+To open wordpress website in your browser use the following command :
+
+``` bash
+ddev launch
+```
 
 #### Local archive server
 

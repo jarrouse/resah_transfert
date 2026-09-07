@@ -1,7 +1,9 @@
-// import-elementor-page.js
+
 import fs from 'fs'
 import path from 'node:path';
-import { changeResourceURI } from './src/utils.js'
+
+import { changeResourceURI, cleanHtml } from './src/utils.js'
+
 
 // 1. Configuration de l'accès WordPress
 import config from "./config.js" ;
@@ -23,7 +25,7 @@ async function importElementorPage(jsonSource) {
     // 4. Extraction et validation des données Elementor
     // Nous vérifions si les métadonnées Elementor existent dans le JSON d'origine
     const metaData = jsonSource.meta || {};
-    const elementorData = metaData._elementor_data ?? jsonSource.content.rendered ?? '';
+    const elementorData = metaData._elementor_data ?? cleanHtml(jsonSource.content.rendered) ?? '';
 
     if (!elementorData) {
       console.warn('⚠️ Attention : Aucune donnée "_elementor_data" trouvée dans le JSON. La page risque d\'être vide dans Elementor.');
@@ -38,7 +40,6 @@ async function importElementorPage(jsonSource) {
       meta: {
         _elementor_edit_mode: 'builder',
         _elementor_template_type: 'page',
-        _elementor_data: typeof elementorData === 'object' ? JSON.stringify(elementorData) : elementorData
       }
     };
 
@@ -50,7 +51,7 @@ async function importElementorPage(jsonSource) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${credentials}`
+        'Authorization': `Basic ${credentials}` 
       },
       body: JSON.stringify(pageData)
     }).catch(e => console.log(e));
@@ -67,6 +68,7 @@ async function importElementorPage(jsonSource) {
     console.log('💡 Allez sur votre tableau de bord WordPress et cliquez sur "Modifier avec Elementor" pour vérifier.');
 
   } catch (error) {
+    console.log(error)
     console.error('❌ Échec de l\'importation :', error.message);
   }
 }
@@ -74,15 +76,18 @@ async function importElementorPage(jsonSource) {
 
 
 async function main(){
-  const entries = await fs.promises.readdir(archivePath, { 
+  const entries = await fs.promises.readdir(path.join(import.meta.dirname,archivePath), { 
     withFileTypes: true, 
     recursive: true 
   });
 
   const jsonFilePaths = entries
-    .filter(entry => entry.isFile() && path.extname(entry.name).toLowerCase() === '.html')
-    .filter(entry => id != null ? entry.parentPath.includes(id) : true )
+    .filter(entry => entry.isFile() && path.extname(entry.name).toLowerCase() === '.html' )
+    .filter(entry => (id != null ? entry.parentPath.endsWith('pages/'+id) : true) )
     .map(entry => path.join(entry.parentPath, entry.name)); // Reconstruit le chemin complet
+
+
+  console.log(jsonFilePaths)
 
   for(let jsonFilePath of jsonFilePaths ){
     
@@ -93,4 +98,4 @@ async function main(){
   }
 }
 
-main()
+await main()
