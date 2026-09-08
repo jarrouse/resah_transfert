@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db2e2497c0fb1fb84ac75c54a84a2a86",
+    "content-hash": "08bca00ecd2aab50c8ca68ae60e7dcd1",
     "packages": [
         {
             "name": "automattic/wordpress-mcp",
@@ -1178,6 +1178,67 @@
                 "source": "https://plugins.svn.wordpress.org/elementor"
             },
             "time": "2026-09-08T11:21:46+00:00"
+        },
+        {
+            "name": "wp-plugin/megamenu",
+            "version": "3.10.7",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/megamenu/",
+                "reference": "tags/3.10.7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/megamenu.3.10.7.zip"
+            },
+            "require": {
+                "composer/installers": "~1.0|~2.0"
+            },
+            "type": "wordpress-plugin",
+            "notification-url": "https://wp-packages.org/downloads",
+            "authors": [
+                {
+                    "name": "megamenu"
+                }
+            ],
+            "description": "An easy to use mega menu plugin. Written the WordPress way.",
+            "homepage": "https://www.megamenu.com",
+            "support": {
+                "changelog": "https://wordpress.org/plugins/megamenu/#developers",
+                "issues": "https://wordpress.org/support/plugin/megamenu",
+                "source": "https://plugins.svn.wordpress.org/megamenu"
+            },
+            "time": "2026-09-08T12:21:14+00:00"
+        },
+        {
+            "name": "wp-plugin/the-events-calendar",
+            "version": "6.17.4",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/the-events-calendar/",
+                "reference": "tags/6.17.4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/the-events-calendar.6.17.4.zip"
+            },
+            "require": {
+                "composer/installers": "~1.0|~2.0"
+            },
+            "type": "wordpress-plugin",
+            "notification-url": "https://wp-packages.org/downloads",
+            "authors": [
+                {
+                    "name": "Nexcess"
+                }
+            ],
+            "description": "The Events Calendar: #1 calendar plugin for WordPress. Create/manage events (virtual too!) on your site with the free plugin.",
+            "support": {
+                "changelog": "https://wordpress.org/plugins/the-events-calendar/#developers",
+                "issues": "https://wordpress.org/support/plugin/the-events-calendar",
+                "source": "https://plugins.svn.wordpress.org/the-events-calendar"
+            },
+            "time": "2026-09-03T19:36:48+00:00"
         },
         {
             "name": "wp-theme/astra",

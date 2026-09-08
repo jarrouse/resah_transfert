@@ -46,6 +46,8 @@
     "roots/wp-config": "^1.0",
     "vlucas/phpdotenv": "^5.0",
     "wp-plugin/elementor": "^4.2.4",
+    "wp-plugin/megamenu": "^3.10",
+    "wp-plugin/the-events-calendar": "^6.17",
     "wp-theme/astra": "4.13.10",
     "wp-theme/twentytwentyfive": "^1.0"
   },
