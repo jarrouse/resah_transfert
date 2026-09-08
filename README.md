@@ -95,6 +95,29 @@ When deploying a migrated instance, deploy the Git-tracked Bedrock codebase, the
 
 For a selective local-to-public content release, use the planned idempotent resource publisher described in [specs/idempotent-resource-publisher.md](specs/idempotent-resource-publisher.md). It uses a named, reviewed migration manifest with explicit local and production resource IDs and a production revision guard; do not use a database import when the target must retain unrelated public changes.
 
+The production release is strictly ordered: 
+1. If needed install any new or updated dependencies 
+2. If any, restart wordpress to enable plugin activation or update
+2. deploy the committed Bedrock code first via scp/ftp/gitlab (less likely)
+3. then deploy/update WordPress resources. 
+
+The resource publisher does not deploy PHP, plugins, themes, or uploaded files. On the production host, fetch the reviewed commit and install the locked dependencies before applying resources:
+
+```bash
+git fetch origin
+git checkout <reviewed-commit>
+composer install --no-dev --prefer-dist --optimize-autoloader
+```
+
+Verify that the deployed code and required files are present, especially `web/app/mu-plugins/` and `web/app/uploads/`. Only after that code deployment succeeds, from the release environment run the manifest in dry-run mode and review it, then apply the resource changes:
+
+```bash
+node --env-file=.env --use-system-ca publish.resources.js migrations/<release>.json
+node --env-file=.env --use-system-ca publish.resources.js --apply migrations/<release>.json
+```
+
+Do not run `--apply` before the reviewed code commit and its Composer dependencies are live on production. Record the deployed commit, dependency-install result, dry-run output, and apply output with the release.
+
 Make sure every custom Resah MU plugin required by the migrated content is committed and deployed under `web/app/mu-plugins/`. For example, the homepage shortcodes `[resah_latest_news]` and `[resah_upcoming_events]` require their shortcode registration code to be deployed with the project, not only the Elementor page data.
 
 Make sure the target instance also receives the relevant uploaded files from `wp-content/uploads` / `web/app/uploads`, otherwise migrated pages may render with broken images, PDFs, or other media links even when the database import succeeds.
@@ -102,8 +125,8 @@ Make sure the target instance also receives the relevant uploaded files from `wp
 Before considering a deployment complete, check the target instance:
 
 ```bash
-wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing"; echo PHP_EOL;'
-wp eval 'echo shortcode_exists("resah_upcoming_events") ? "exists" : "missing"; echo PHP_EOL;'
+ddev wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing"; echo PHP_EOL;'
+ddev wp eval 'echo shortcode_exists("resah_upcoming_events") ? "exists" : "missing"; echo PHP_EOL;'
 ```
 
 If either command returns `missing`, deploy the corresponding custom code from `web/app/mu-plugins/` before importing or validating the affected pages.
