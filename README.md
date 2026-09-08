@@ -93,6 +93,8 @@ ddev wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing";
 
 When deploying a migrated instance, deploy the Git-tracked Bedrock codebase, the database/content changes, and the uploaded media together. Imported pages can reference custom shortcodes, hooks, filters, and files under `wp-content/uploads`; in Bedrock those uploaded files live under `web/app/uploads/`.
 
+For a selective local-to-public content release, use the planned idempotent resource publisher described in [specs/idempotent-resource-publisher.md](specs/idempotent-resource-publisher.md). It uses a named, reviewed migration manifest with explicit local and production resource IDs and a production revision guard; do not use a database import when the target must retain unrelated public changes.
+
 Make sure every custom Resah MU plugin required by the migrated content is committed and deployed under `web/app/mu-plugins/`. For example, the homepage shortcodes `[resah_latest_news]` and `[resah_upcoming_events]` require their shortcode registration code to be deployed with the project, not only the Elementor page data.
 
 Make sure the target instance also receives the relevant uploaded files from `wp-content/uploads` / `web/app/uploads`, otherwise migrated pages may render with broken images, PDFs, or other media links even when the database import succeeds.
@@ -111,7 +113,7 @@ If either command returns `missing`, deploy the corresponding custom code from `
 Example 
 
 ``` bash
-node --env-file=.env --use-system-ca provision.page.js migrations/pages/index.json
+node --env-file=.env --use-system-ca provision.page.js backup/pages/index.json
 ```
 
 ### Categories
@@ -119,7 +121,7 @@ node --env-file=.env --use-system-ca provision.page.js migrations/pages/index.js
 Example 
 
 ``` bash
-node --env-file=./.env --use-system-ca provision.page.js migrations/pages 2066
+node --env-file=./.env --use-system-ca provision.page.js backup/pages 2066
 ```
 
 > The last parameter is optional, when it is set the tool will only migrate the corresponding page
