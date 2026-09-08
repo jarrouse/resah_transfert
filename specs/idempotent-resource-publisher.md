@@ -16,15 +16,22 @@ full database synchronizer and must not require an agent to perform changes.
 - Migration definitions and generated reports: `migrations/`.
 - Historical exports from the former public site: `backup/`. They are
    reference material only and must never be treated as publish input.
-- Initially supported resource types: pages and categories.
+- Supported resource types: pages, categories, posts, and events (`tribe_events`
+   from The Events Calendar).
 - Target: the WordPress REST API configured by `WP_SITE_URL`, `WP_USERNAME`,
   and `APPLICATION_PASSWORD` in `.env`.
 - Explicit invocation by a user; no automatic deployment hook in the first
   version.
 
-Posts, media, custom post types, tags, authors, menus, and Elementor template
+Media, other custom post types, tags, authors, menus, and Elementor template
 relationships are out of scope until their identity and reference-mapping
-rules are specified.
+rules are specified. For events specifically, venue, organizer, ticket, and
+category/tag term assignments are cross-site references with unresolved
+identity mapping and are never read or written; only the title, description,
+slug, status, schedule (`start_date`, `end_date`, `all_day`, `timezone`), and
+`cost` fields are synced. Events use The Events Calendar's own
+`tribe/events/v1` REST API instead of `wp/v2`, since scheduling fields are not
+exposed through the core post-type REST controller.
 
 ## Migration manifests
 
@@ -109,7 +116,8 @@ Rules:
    deleted by this publisher.
 4. `--add` accepts one or more explicit references in the form
    `<type>:<local-id>=<production-id>`, followed by the manifest path. IDs must
-   be positive integers and types are limited to `page` and `category`.
+   be positive integers and types are limited to `page`, `category`, `post`,
+   and `event`.
 5. A missing, malformed, empty, duplicate, or type-mismatched manifest entry is
    an error. A resource may not be inferred from a changed Git file: code-file
    changes and WordPress resource changes have different identities.
@@ -164,7 +172,8 @@ For each resource, in deterministic order:
 For parent pages and categories, process parents before children. A child entry
 must declare the production parent ID where the parent differs from local.
 Never copy a local numeric parent ID to production. Fail a child whose selected
-parent does not exist on production.
+parent does not exist on production. Posts and events are not hierarchical and
+have no parent mapping.
 
 ## Safety and failure behavior
 
@@ -204,7 +213,7 @@ Recommended release sequence:
 ## Acceptance criteria
 
 - A repeated `--apply` of the same manifest updates only its declared target
-   resource and never creates a second page or category.
+   resource and never creates a duplicate page, category, post, or event.
 - A changed production `modified_gmt` causes a clear conflict error and no
    write for that resource.
 - A dry run performs no POST, PUT, or DELETE request.

@@ -14,7 +14,7 @@ const { WP_SITE_URL, WP_USERNAME, APPLICATION_PASSWORD } = config;
 
 const MIGRATIONS_DIR = path.resolve(process.cwd(), 'migrations');
 
-const RESOURCE_TYPES = ['page', 'category'];
+const RESOURCE_TYPES = ['page', 'category', 'post', 'event'];
 
 const RESOURCE_CONFIGS = {
   page: {
@@ -75,7 +75,77 @@ const RESOURCE_CONFIGS = {
       };
     },
   },
+  post: {
+    endpoint: 'posts',
+    metaAllowlist: [],
+    validateShape(resource) {
+      return resource && typeof resource.id === 'number' && typeof resource.slug === 'string' && resource.title != null;
+    },
+    buildPayload(local, _parentProductionId, metaAllowlist) {
+      return {
+        title: local.title?.raw ?? '',
+        slug: local.slug ?? '',
+        content: local.content?.raw ?? '',
+        status: local.status,
+        meta: pickAllowedMeta(local.meta, metaAllowlist),
+      };
+    },
+    buildComparable(production, metaAllowlist) {
+      return {
+        title: production.title?.raw ?? '',
+        slug: production.slug ?? '',
+        content: production.content?.raw ?? '',
+        status: production.status,
+        meta: pickAllowedMeta(production.meta, metaAllowlist),
+      };
+    },
+  },
+  // Uses the dedicated The Events Calendar v1 API (not wp/v2): it is the only
+  // interface that exposes event scheduling fields. Venue, organizer, and
+  // category/tag term assignments are cross-site references with unresolved
+  // identity mapping, so they are intentionally never synced (see spec scope).
+  event: {
+    apiPath: (id) => `tribe/events/v1/events/${id}`,
+    metaAllowlist: [],
+    getModifiedGmt(data) {
+      return data.modified_utc;
+    },
+    validateShape(resource) {
+      return resource && typeof resource.id === 'number' && typeof resource.slug === 'string' && resource.title != null;
+    },
+    buildPayload(local) {
+      return {
+        title: local.title ?? '',
+        slug: local.slug ?? '',
+        description: local.description ?? '',
+        status: local.status,
+        start_date: local.start_date,
+        end_date: local.end_date,
+        all_day: !!local.all_day,
+        timezone: local.timezone,
+        cost: local.cost ?? '',
+      };
+    },
+    buildComparable(production) {
+      return {
+        title: production.title ?? '',
+        slug: production.slug ?? '',
+        description: production.description ?? '',
+        status: production.status,
+        start_date: production.start_date,
+        end_date: production.end_date,
+        all_day: !!production.all_day,
+        timezone: production.timezone,
+        cost: production.cost ?? '',
+      };
+    },
+  },
 };
+
+function getModifiedGmt(type, data) {
+  const getter = RESOURCE_CONFIGS[type].getModifiedGmt;
+  return getter ? getter(data) : data.modified_gmt;
+}
 
 function pickAllowedMeta(meta, allowlist) {
   const result = {};
@@ -195,9 +265,15 @@ function authHeader() {
   return `Basic ${Buffer.from(`${WP_USERNAME}:${APPLICATION_PASSWORD}`).toString('base64')}`;
 }
 
+function resourceUrl(type, id) {
+  const resourceConfig = RESOURCE_CONFIGS[type];
+  const routePath = resourceConfig.apiPath ? resourceConfig.apiPath(id) : `wp/v2/${resourceConfig.endpoint}/${id}`;
+  return `${WP_SITE_URL}/wp-json/${routePath}`;
+}
+
 async function fetchResource(type, id) {
-  const endpoint = RESOURCE_CONFIGS[type].endpoint;
-  const url = `${WP_SITE_URL}/wp-json/wp/v2/${endpoint}/${id}?context=edit`;
+  const resourceConfig = RESOURCE_CONFIGS[type];
+  const url = resourceConfig.apiPath ? resourceUrl(type, id) : `${resourceUrl(type, id)}?context=edit`;
   const response = await fetch(url, {
     headers: { Authorization: authHeader() },
   });
@@ -205,15 +281,14 @@ async function fetchResource(type, id) {
     throw new Error(`Failed to fetch ${type} ${id}: HTTP ${response.status}`);
   }
   const data = await response.json();
-  if (!RESOURCE_CONFIGS[type].validateShape(data)) {
+  if (!resourceConfig.validateShape(data)) {
     throw new Error(`Unexpected response shape for ${type} ${id}`);
   }
   return data;
 }
 
 async function updateResource(type, id, payload) {
-  const endpoint = RESOURCE_CONFIGS[type].endpoint;
-  const url = `${WP_SITE_URL}/wp-json/wp/v2/${endpoint}/${id}`;
+  const url = resourceUrl(type, id);
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -230,7 +305,7 @@ async function updateResource(type, id, payload) {
 }
 
 function parseAddRef(ref) {
-  const match = /^(page|category):(\d+)=(\d+)$/.exec(ref);
+  const match = /^(page|category|post|event):(\d+)=(\d+)$/.exec(ref);
   if (!match) {
     throw usageError(`Invalid --add reference: ${ref} (expected <type>:<local-id>=<production-id>)`);
   }
@@ -305,9 +380,10 @@ async function processResource(resource, allResources, apply) {
   const local = await fetchResource(resource.type, resource.localId);
   const production = await fetchResource(resource.type, resource.productionId);
 
-  if (production.modified_gmt !== resource.expectedProductionModifiedGmt) {
+  const productionModifiedGmt = getModifiedGmt(resource.type, production);
+  if (productionModifiedGmt !== resource.expectedProductionModifiedGmt) {
     throw new Error(
-      `${reference}: production revision conflict (expected ${resource.expectedProductionModifiedGmt}, found ${production.modified_gmt}). Regenerate the manifest after review.`
+      `${reference}: production revision conflict (expected ${resource.expectedProductionModifiedGmt}, found ${productionModifiedGmt}). Regenerate the manifest after review.`
     );
   }
 
@@ -425,7 +501,7 @@ async function addResources(refs, manifestPath) {
         type: ref.type,
         localId: ref.localId,
         productionId: ref.productionId,
-        expectedProductionModifiedGmt: production.modified_gmt,
+        expectedProductionModifiedGmt: getModifiedGmt(ref.type, production),
         __local: local,
       };
     })
