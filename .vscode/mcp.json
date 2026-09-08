@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "id": "wp_api_username",
+      "type": "promptString",
+      "description": "WordPress username (application password owner)"
+    },
+    {
+      "id": "wp_api_password",
+      "type": "promptString",
+      "description": "WordPress application password",
+      "password": true
+    }
+  ],
+  "servers": {
+    "wordpress": {
+      "command": "npx",
+      "args": ["-y", "@automattic/mcp-wordpress-remote"],
+      "env": {
+        "WP_API_URL": "https://local-wordpress-bedrock.ddev.site",
+        "WP_API_USERNAME": "${input:wp_api_username}",
+        "WP_API_PASSWORD": "${input:wp_api_password}",
+        "OAUTH_ENABLED": "false",
+        "NODE_OPTIONS": "--use-system-ca"
+      }
+    }
+  }
+}
