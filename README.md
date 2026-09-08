@@ -77,6 +77,18 @@ The Composer command updates both `composer.json` and `composer.lock`, so commit
 
 ## Provision
 
+### Missing shortcodes after migration
+
+If an imported Elementor page displays a shortcode as plain text, for example `[resah_latest_news count="3"]`, WordPress has not loaded the PHP code that registers that shortcode. The page export only contains the shortcode usage; it does not export the custom handler registered with `add_shortcode()`.
+
+In this project, Resah-specific shortcode handlers must be imported as custom code under `web/app/mu-plugins/`. A missing shortcode therefore usually means a missing MU plugin or another missing custom code file from the existing site.
+
+After importing the missing file, validate that WordPress can see the shortcode:
+
+```bash
+ddev wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing"; echo PHP_EOL;'
+```
+
 ### Pages
 
 Example 
