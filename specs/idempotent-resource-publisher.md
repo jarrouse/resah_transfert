@@ -12,14 +12,18 @@ full database synchronizer and must not require an agent to perform changes.
 
 ## Scope
 
-- Source: the configured local WordPress REST API.
+- Source: the local WordPress REST API configured by `WP_SITE_URL`,
+   `WP_USERNAME`, and `APPLICATION_PASSWORD` in `.env`.
 - Migration definitions and generated reports: `migrations/`.
 - Historical exports from the former public site: `backup/`. They are
    reference material only and must never be treated as publish input.
 - Supported resource types: pages, categories, posts, and events (`tribe_events`
    from The Events Calendar).
-- Target: the WordPress REST API configured by `WP_SITE_URL`, `WP_USERNAME`,
-  and `APPLICATION_PASSWORD` in `.env`.
+- Target: the production WordPress REST API configured by
+   `PRODUCTION_WP_SITE_URL`, `PRODUCTION_WP_USERNAME`, and
+   `PRODUCTION_APPLICATION_PASSWORD` in `.env`. These are separate credentials
+   from the source site and both sets must be present before any resource is
+   read or written.
 - Explicit invocation by a user; no automatic deployment hook in the first
   version.
 
@@ -175,6 +179,22 @@ Never copy a local numeric parent ID to production. Fail a child whose selected
 parent does not exist on production. Posts and events are not hierarchical and
 have no parent mapping.
 
+## Backup before apply
+
+When `--apply` is used, the publisher first fetches and validates every
+manifest resource (steps 1-3 above) without writing anything, then writes a
+single backup file capturing the full raw production representation of each
+successfully validated resource, before performing any update. The backup is
+written to `migrations/backups/<manifest-name>/<capturedAt-timestamp>.json`
+and includes the manifest path, capture time, and each resource's `type`,
+`localId`, `productionId`, and raw pre-update production payload.
+
+The backup is scoped to only the resources targeted by the manifest, is
+written atomically like a manifest, and is only produced during `--apply`; a
+dry run never creates one. This provides a restore point for manual rollback
+if an applied migration needs to be reverted; the publisher does not itself
+provide a rollback command in this version.
+
 ## Safety and failure behavior
 
 - Use HTTP Basic authentication with the configured application password.
@@ -226,3 +246,5 @@ Recommended release sequence:
 - The tool can update an existing target resource when its numeric ID differs
    from its local source ID.
 - Resources outside the manifest are never read for update or modified.
+- `--apply` writes a backup file with the pre-update production state of every
+   targeted resource before making any write, and a dry run never writes one.

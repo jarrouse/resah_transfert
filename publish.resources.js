@@ -10,7 +10,23 @@ import config from './config.js';
 
 const execFileAsync = promisify(execFile);
 
-const { WP_SITE_URL, WP_USERNAME, APPLICATION_PASSWORD } = config;
+const {
+  WP_SITE_URL,
+  WP_USERNAME,
+  APPLICATION_PASSWORD,
+  PRODUCTION_WP_SITE_URL,
+  PRODUCTION_WP_USERNAME,
+  PRODUCTION_APPLICATION_PASSWORD,
+} = config;
+
+const SITES = {
+  local: { siteUrl: WP_SITE_URL, username: WP_USERNAME, applicationPassword: APPLICATION_PASSWORD },
+  production: {
+    siteUrl: PRODUCTION_WP_SITE_URL,
+    username: PRODUCTION_WP_USERNAME,
+    applicationPassword: PRODUCTION_APPLICATION_PASSWORD,
+  },
+};
 
 const MIGRATIONS_DIR = path.resolve(process.cwd(), 'migrations');
 
@@ -204,12 +220,24 @@ async function readManifest(manifestPath) {
   return manifest;
 }
 
-async function writeManifestAtomic(manifestPath, manifest) {
-  await fs.mkdir(path.dirname(manifestPath), { recursive: true });
-  const tmpPath = `${manifestPath}.tmp-${process.pid}`;
-  const contents = `${JSON.stringify(manifest, null, 2)}\n`;
+async function writeJsonAtomic(filePath, data) {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const tmpPath = `${filePath}.tmp-${process.pid}`;
+  const contents = `${JSON.stringify(data, null, 2)}\n`;
   await fs.writeFile(tmpPath, contents, 'utf8');
-  await fs.rename(tmpPath, manifestPath);
+  await fs.rename(tmpPath, filePath);
+}
+
+async function writeManifestAtomic(manifestPath, manifest) {
+  await writeJsonAtomic(manifestPath, manifest);
+}
+
+// One backup file per --apply run, capturing the pre-update production state
+// of every resource targeted by the manifest, for manual rollback if needed.
+function backupPath(manifestPath) {
+  const manifestName = path.basename(manifestPath, '.json');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return path.join(MIGRATIONS_DIR, 'backups', manifestName, `${timestamp}.json`);
 }
 
 function filePathKey(entry) {
@@ -254,52 +282,63 @@ async function gitChangedFiles(revision) {
     });
 }
 
-function requireHttps() {
+function requireSiteConfig(site) {
+  const { siteUrl, username, applicationPassword } = SITES[site];
+  const prefix = site === 'production' ? 'PRODUCTION_WP_SITE_URL/PRODUCTION_WP_USERNAME/PRODUCTION_APPLICATION_PASSWORD' : 'WP_SITE_URL/WP_USERNAME/APPLICATION_PASSWORD';
+  if (!siteUrl || !username || !applicationPassword) {
+    throw usageError(`Missing ${site} site credentials: set ${prefix} in .env.`);
+  }
   const allowInsecure = process.env.WP_ALLOW_INSECURE_HTTP === '1';
-  if (!WP_SITE_URL || (!WP_SITE_URL.startsWith('https://') && !allowInsecure)) {
-    throw usageError('WP_SITE_URL must use HTTPS (set WP_ALLOW_INSECURE_HTTP=1 to override for local development).');
+  if (!siteUrl.startsWith('https://') && !allowInsecure) {
+    throw usageError(`${site === 'production' ? 'PRODUCTION_WP_SITE_URL' : 'WP_SITE_URL'} must use HTTPS (set WP_ALLOW_INSECURE_HTTP=1 to override for local development).`);
   }
 }
 
-function authHeader() {
-  return `Basic ${Buffer.from(`${WP_USERNAME}:${APPLICATION_PASSWORD}`).toString('base64')}`;
+function requireSiteCredentials() {
+  requireSiteConfig('local');
+  requireSiteConfig('production');
 }
 
-function resourceUrl(type, id) {
+function authHeader(site) {
+  const { username, applicationPassword } = SITES[site];
+  return `Basic ${Buffer.from(`${username}:${applicationPassword}`).toString('base64')}`;
+}
+
+function resourceUrl(site, type, id) {
   const resourceConfig = RESOURCE_CONFIGS[type];
   const routePath = resourceConfig.apiPath ? resourceConfig.apiPath(id) : `wp/v2/${resourceConfig.endpoint}/${id}`;
-  return `${WP_SITE_URL}/wp-json/${routePath}`;
+  return `${SITES[site].siteUrl}/wp-json/${routePath}`;
 }
 
-async function fetchResource(type, id) {
+async function fetchResource(site, type, id) {
   const resourceConfig = RESOURCE_CONFIGS[type];
-  const url = resourceConfig.apiPath ? resourceUrl(type, id) : `${resourceUrl(type, id)}?context=edit`;
+  const url = resourceConfig.apiPath ? resourceUrl(site, type, id) : `${resourceUrl(site, type, id)}?context=edit`;
   const response = await fetch(url, {
-    headers: { Authorization: authHeader() },
+    headers: { Authorization: authHeader(site) },
   });
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${type} ${id}: HTTP ${response.status}`);
+    throw new Error(`Failed to fetch ${site} ${type} ${id}: HTTP ${response.status}`);
   }
   const data = await response.json();
   if (!resourceConfig.validateShape(data)) {
-    throw new Error(`Unexpected response shape for ${type} ${id}`);
+    throw new Error(`Unexpected response shape for ${site} ${type} ${id}`);
   }
   return data;
 }
 
-async function updateResource(type, id, payload) {
-  const url = resourceUrl(type, id);
+async function updateResource(site, type, id, payload) {
+  const url = resourceUrl(site, type, id);
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(site),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(`Failed to update ${type} ${id}: HTTP ${response.status} ${data.message ?? ''}`.trim());
+    throw new Error(`Failed to update ${site} ${type} ${id}: HTTP ${response.status} ${data.message ?? ''}`.trim());
   }
   return response.json();
 }
@@ -373,12 +412,12 @@ function deepEqual(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-async function processResource(resource, allResources, apply) {
+async function prepareResource(resource, allResources) {
   const reference = `${resource.type}:${resource.localId}=${resource.productionId}`;
   const resourceConfig = RESOURCE_CONFIGS[resource.type];
 
-  const local = await fetchResource(resource.type, resource.localId);
-  const production = await fetchResource(resource.type, resource.productionId);
+  const local = await fetchResource('local', resource.type, resource.localId);
+  const production = await fetchResource('production', resource.type, resource.productionId);
 
   const productionModifiedGmt = getModifiedGmt(resource.type, production);
   if (productionModifiedGmt !== resource.expectedProductionModifiedGmt) {
@@ -400,19 +439,24 @@ async function processResource(resource, allResources, apply) {
 
   const payload = resourceConfig.buildPayload(local, parentProductionId, resourceConfig.metaAllowlist);
   const comparable = resourceConfig.buildComparable(production, resourceConfig.metaAllowlist);
+  const changedFields = Object.keys(payload).filter((key) => !deepEqual(payload[key], comparable[key]));
 
-  if (deepEqual(payload, comparable)) {
+  return { resource, reference, resourceConfig, production, payload, changedFields };
+}
+
+async function finalizeResource(prepared, apply) {
+  const { resource, reference, resourceConfig, payload, changedFields } = prepared;
+
+  if (changedFields.length === 0) {
     return { reference, targetId: resource.productionId, action: 'unchanged', changedFields: [] };
   }
-
-  const changedFields = Object.keys(payload).filter((key) => !deepEqual(payload[key], comparable[key]));
 
   if (!apply) {
     return { reference, targetId: resource.productionId, action: 'would-update', changedFields };
   }
 
-  await updateResource(resource.type, resource.productionId, payload);
-  const verified = await fetchResource(resource.type, resource.productionId);
+  await updateResource('production', resource.type, resource.productionId, payload);
+  const verified = await fetchResource('production', resource.type, resource.productionId);
   const verifiedComparable = resourceConfig.buildComparable(verified, resourceConfig.metaAllowlist);
   if (!deepEqual(payload, verifiedComparable)) {
     throw new Error(`${reference}: post-update verification failed, target does not match the expected payload`);
@@ -422,20 +466,51 @@ async function processResource(resource, allResources, apply) {
 }
 
 async function runManifest(manifestPath, apply) {
-  requireHttps();
+  requireSiteCredentials();
   const manifest = await readManifest(manifestPath);
   const ordered = orderResourcesForProcessing(manifest.resources);
 
-  const results = [];
+  // Read-only preparation pass: fetch and validate every resource before any write happens.
+  const outcomes = [];
   for (const resource of ordered) {
     try {
-      results.push(await processResource(resource, manifest.resources, apply));
+      outcomes.push({ ok: true, prepared: await prepareResource(resource, manifest.resources) });
     } catch (error) {
-      results.push({
-        reference: `${resource.type}:${resource.localId}=${resource.productionId}`,
-        action: 'error',
-        message: error.message,
+      outcomes.push({ ok: false, reference: `${resource.type}:${resource.localId}=${resource.productionId}`, message: error.message });
+    }
+  }
+
+  // Persist a pre-update snapshot of the targeted production resources before any write, for manual rollback.
+  if (apply) {
+    const backupResources = outcomes
+      .filter((outcome) => outcome.ok)
+      .map(({ prepared }) => ({
+        type: prepared.resource.type,
+        localId: prepared.resource.localId,
+        productionId: prepared.resource.productionId,
+        production: prepared.production,
+      }));
+    if (backupResources.length > 0) {
+      const backupFile = backupPath(manifestPath);
+      await writeJsonAtomic(backupFile, {
+        manifest: manifestPath,
+        capturedAt: new Date().toISOString(),
+        resources: backupResources,
       });
+      console.log(`Backed up ${backupResources.length} production resource(s) to ${backupFile}`);
+    }
+  }
+
+  const results = [];
+  for (const outcome of outcomes) {
+    if (!outcome.ok) {
+      results.push({ reference: outcome.reference, action: 'error', message: outcome.message });
+      continue;
+    }
+    try {
+      results.push(await finalizeResource(outcome.prepared, apply));
+    } catch (error) {
+      results.push({ reference: outcome.prepared.reference, action: 'error', message: error.message });
     }
   }
 
@@ -485,7 +560,7 @@ async function addFilesFrom(revision, manifestPath) {
 }
 
 async function addResources(refs, manifestPath) {
-  requireHttps();
+  requireSiteCredentials();
   const manifest = await readManifest(manifestPath);
   const requested = refs.map(parseAddRef);
 
@@ -494,8 +569,8 @@ async function addResources(refs, manifestPath) {
   const outcomes = await Promise.allSettled(
     requested.map(async (ref) => {
       const [local, production] = await Promise.all([
-        fetchResource(ref.type, ref.localId),
-        fetchResource(ref.type, ref.productionId),
+        fetchResource('local', ref.type, ref.localId),
+        fetchResource('production', ref.type, ref.productionId),
       ]);
       return {
         type: ref.type,
