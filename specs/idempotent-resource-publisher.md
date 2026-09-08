@@ -224,11 +224,27 @@ Recommended release sequence:
 3. Add each resource intentionally with `--add`, which captures its production
    revision guard asynchronously.
 4. Commit the reviewed manifest and supporting Bedrock code.
-5. Run the manifest without `--apply` and review the exact resources and
-   actions.
-6. Deploy required code.
-7. Run the same command with `--apply` using production credentials.
-8. Keep the command output with the deployment record.
+5. Deploy the reviewed commit to production before publishing resources. The
+   deployment must fetch/checkout that commit and run the production
+   dependency installation from the lock file, for example:
+
+   ```bash
+   git fetch origin
+   git checkout <reviewed-commit>
+   composer install --no-dev --prefer-dist --optimize-autoloader
+   ```
+
+   Verify the deployed code, required MU plugins, themes, and uploaded files
+   are present and active. This code deployment is performed by the production
+   hosting/release process; this publisher does not deploy files or run
+   Composer on production.
+6. Run the manifest without `--apply` and review the exact resources and
+   actions, using the same release manifest and production credentials.
+7. Run the same command with `--apply` using production credentials. This is
+   the first step allowed to update WordPress resources, and it must happen
+   only after step 5 succeeds.
+8. Keep the deployed commit, dependency-install result, dry-run output, and
+   apply output with the deployment record.
 
 ## Acceptance criteria
 
