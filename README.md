@@ -89,6 +89,21 @@ After importing the missing file, validate that WordPress can see the shortcode:
 ddev wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing"; echo PHP_EOL;'
 ```
 
+### Deploying migrated code and content
+
+When deploying a migrated instance, deploy the Git-tracked Bedrock codebase and the database/content changes together. Imported pages can reference custom shortcodes, hooks, or filters that only work when the matching PHP code is present on the target instance.
+
+Make sure every custom Resah MU plugin required by the migrated content is committed and deployed under `web/app/mu-plugins/`. For example, the homepage shortcodes `[resah_latest_news]` and `[resah_upcoming_events]` require their shortcode registration code to be deployed with the project, not only the Elementor page data.
+
+Before considering a deployment complete, check the target instance:
+
+```bash
+wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing"; echo PHP_EOL;'
+wp eval 'echo shortcode_exists("resah_upcoming_events") ? "exists" : "missing"; echo PHP_EOL;'
+```
+
+If either command returns `missing`, deploy the corresponding custom code from `web/app/mu-plugins/` before importing or validating the affected pages.
+
 ### Pages
 
 Example 
