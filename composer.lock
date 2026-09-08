@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2de297c176e89dcd3fdc746e41dfc54f",
+    "content-hash": "db2e2497c0fb1fb84ac75c54a84a2a86",
     "packages": [
         {
             "name": "automattic/wordpress-mcp",
@@ -1150,15 +1150,15 @@
         },
         {
             "name": "wp-plugin/elementor",
-            "version": "3.35.9",
+            "version": "4.2.4",
             "source": {
                 "type": "svn",
                 "url": "https://plugins.svn.wordpress.org/elementor/",
-                "reference": "tags/3.35.9"
+                "reference": "tags/4.2.4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/elementor.3.35.9.zip"
+                "url": "https://downloads.wordpress.org/plugin/elementor.4.2.4.zip"
             },
             "require": {
                 "composer/installers": "~1.0|~2.0"
@@ -1177,7 +1177,7 @@
                 "issues": "https://wordpress.org/support/plugin/elementor",
                 "source": "https://plugins.svn.wordpress.org/elementor"
             },
-            "time": "2026-09-01T12:01:47+00:00"
+            "time": "2026-09-08T11:21:46+00:00"
         },
         {
             "name": "wp-theme/astra",

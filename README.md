@@ -54,6 +54,22 @@ Please follow the steps in ddev installation [guide](https://ddev.com/get-starte
 2. Set your credentials in .env file, follow .env.example. \
 Use the password generated at previous step
 
+### Install and activate a plugin
+
+Add the plugin to `composer.json` and install it with Composer through DDEV. Replace `<plugin-slug>` and `<version>` with the plugin package and version you need:
+
+```bash
+ddev composer require wp-plugin/<plugin-slug>:<version>
+```
+
+Then activate the installed plugin in WordPress:
+
+```bash
+ddev wp plugin activate <plugin-slug>
+```
+
+The Composer command updates both `composer.json` and `composer.lock`, so commit both files with the change.
+
 
 ### Certificate issues 
 
