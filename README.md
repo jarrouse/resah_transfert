@@ -91,9 +91,11 @@ ddev wp eval 'echo shortcode_exists("resah_latest_news") ? "exists" : "missing";
 
 ### Deploying migrated code and content
 
-When deploying a migrated instance, deploy the Git-tracked Bedrock codebase and the database/content changes together. Imported pages can reference custom shortcodes, hooks, or filters that only work when the matching PHP code is present on the target instance.
+When deploying a migrated instance, deploy the Git-tracked Bedrock codebase, the database/content changes, and the uploaded media together. Imported pages can reference custom shortcodes, hooks, filters, and files under `wp-content/uploads`; in Bedrock those uploaded files live under `web/app/uploads/`.
 
 Make sure every custom Resah MU plugin required by the migrated content is committed and deployed under `web/app/mu-plugins/`. For example, the homepage shortcodes `[resah_latest_news]` and `[resah_upcoming_events]` require their shortcode registration code to be deployed with the project, not only the Elementor page data.
+
+Make sure the target instance also receives the relevant uploaded files from `wp-content/uploads` / `web/app/uploads`, otherwise migrated pages may render with broken images, PDFs, or other media links even when the database import succeeds.
 
 Before considering a deployment complete, check the target instance:
 
