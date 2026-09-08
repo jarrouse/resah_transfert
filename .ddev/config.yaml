@@ -293,3 +293,6 @@ corepack_enable: false
 # Un-comment to emit the WP CLI version after ddev start.
 #  post-start:
 #    - exec: wp cli version
+hooks:
+    post-start:
+        - exec: wp plugin activate --all
