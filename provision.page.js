@@ -25,8 +25,28 @@ async function importElementorPage(jsonSource) {
     // 4. Extraction et validation des données Elementor
     // Nous vérifions si les métadonnées Elementor existent dans le JSON d'origine
     const metaData = jsonSource.meta || {};
-    const elementorData = metaData._elementor_data ?? cleanHtml(jsonSource.content.rendered) ?? '';
-
+    const elementorData = jsonSource.spectra_custom_meta?._elementor_data ?? '';
+    // const metaData2 = {
+    //     ...metaData,
+    //     ...jsonSource.spectra_custom_meta,
+    //     "site-sidebar-layout": jsonSource.meta["site-sidebar-layout"][0] ?? "",
+    //     "site-content-layout": jsonSource.spectra_custom_meta["site-sidebar-layout"]?.[0] ?? "",
+    //     "ast-site-content-layout": jsonSource.spectra_custom_meta["ast-site-content-layout"]?.[0] ?? "",
+    //     "site-content-style": jsonSource.spectra_custom_meta["site-content-style"]?.[0] ?? "",
+    //     "site-post-title": jsonSource.spectra_custom_meta["site-post-title"]?.[0] ?? "",
+    //     "ast-featured-img": jsonSource.spectra_custom_meta["ast-featured-img"]?.[0] ?? "",
+    //     "theme-transparent-header-meta": jsonSource.spectra_custom_meta["theme-transparent-header-meta"]?.[0] ?? "",
+    //     "adv-header-id-meta": jsonSource.spectra_custom_meta["adv-header-id-meta"]?.[0] ?? "",
+    //     "stick-header-meta": jsonSource.spectra_custom_meta["stick-header-meta"]?.[0] ?? "",
+    //     "astra-migrate-meta-layouts": jsonSource.spectra_custom_meta["astra-migrate-meta-layouts"]?.[0] ?? "",
+    //     "footnotes": jsonSource.spectra_custom_meta["footnotes"]?.[0] ?? "",
+    //     "_elementor_edit_mode": jsonSource.spectra_custom_meta["_elementor_edit_mode"]?.[0] ?? "",
+    //     "_elementor_template_type": jsonSource.spectra_custom_meta["_elementor_template_type"]?.[0] ?? "",
+    //     "_elementor_data": jsonSource.spectra_custom_meta["_elementor_data"]?.[0] ?? "",
+    //     "_elementor_edit_mode": "builder",
+    //     "_elementor_template_type": "wp-page",
+    //     "site-sidebar-style": jsonSource.spectra_custom_meta["site-sidebar-style"]?.[0] ?? ""
+    //   }
     if (!elementorData) {
       console.warn('⚠️ Attention : Aucune donnée "_elementor_data" trouvée dans le JSON. La page risque d\'être vide dans Elementor.');
     }
@@ -36,10 +56,13 @@ async function importElementorPage(jsonSource) {
       title: jsonSource.title?.rendered || jsonSource.title || 'Page Importée Elementor',
       status: 'publish', // 'publish' pour la mettre en ligne, 'draft' pour un brouillon
       type: 'page',
-      content: elementorData, // Elementor utilise les meta, le contenu principal reste généralement vide
+      content: {
+        // raw: jsonSource.content?.raw || "",
+        // rendered: jsonSource.content?.rendered || ""
+      }, // Elementor utilise les meta, le contenu principal reste généralement vide
       meta: {
-        _elementor_edit_mode: 'builder',
-        _elementor_template_type: 'page',
+        ...jsonSource.meta,
+        ...transformSpectraMetadata(jsonSource.spectra_custom_meta)
       }
     };
 
@@ -73,6 +96,13 @@ async function importElementorPage(jsonSource) {
   }
 }
 
+function transformSpectraMetadata(obj){
+  return Object.keys(obj).reduce((acc, key) => {
+    acc[key] = obj[key][0];
+    return acc;
+  }, {});
+}
+
 
 
 async function main(){
@@ -93,7 +123,10 @@ async function main(){
     
     await fs.promises.readFile(jsonFilePath, 'utf8')
       .then(rawData => changeResourceURI(rawData))
-      .then(rawData =>JSON.parse(rawData))
+      .then(rawData =>{
+
+        return JSON.parse(rawData)
+      })
       .then(json => importElementorPage(json))
   }
 }
