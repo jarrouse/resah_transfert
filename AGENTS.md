@@ -1,5 +1,9 @@
 # Project Guidelines
 
+## Response Style
+
+- Keep responses concise and focused on the user's request.
+
 ## Dependency Management
 
 - Use DDEV for project commands.
