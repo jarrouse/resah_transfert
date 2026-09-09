@@ -131,12 +131,22 @@ ddev wp eval 'echo shortcode_exists("resah_upcoming_events") ? "exists" : "missi
 
 If either command returns `missing`, deploy the corresponding custom code from `web/app/mu-plugins/` before importing or validating the affected pages.
 
+## Old page provisioning
+
+Those tools are intended to import pages, category from archive to the new Wordpress instance. 
+
+### Status 
+
+- [x] base implementation
+- [x] test import into local instance
+- [] validate imported pages are compatible with required plugins and configuration 
+
 ### Pages
 
 Example 
 
 ``` bash
-node --env-file=.env --use-system-ca provision.page.js backup/pages/index.json
+node --env-file=.env --use-system-ca provision.page.js backup/pages 2066
 ```
 
 ### Categories
@@ -144,7 +154,7 @@ node --env-file=.env --use-system-ca provision.page.js backup/pages/index.json
 Example 
 
 ``` bash
-node --env-file=./.env --use-system-ca provision.page.js backup/pages 2066
+node --env-file=./.env --use-system-ca provision.page.js backup/category 2066
 ```
 
 > The last parameter is optional, when it is set the tool will only migrate the corresponding page
