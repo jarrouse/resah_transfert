@@ -1,0 +1,26 @@
+services:
+  web:
+    image: node:24-alpine
+    working_dir: /app
+    # runs as root: the named node_modules volume is root-owned by default and there's no
+    # Dockerfile build step available to chown it to the non-root "node" user
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - "./server.js:/app/server.js:ro"
+      - "./src:/app/src:ro"
+      - "./public:/app/public:ro"
+      - "./package.json:/app/package.json:ro"
+      - "./package-lock.json:/app/package-lock.json:ro"
+      - "node_modules:/app/node_modules"
+      - "${SERVE_ROOT}:/data/site:ro"
+      - "${SERVE_INDEX_PATH}:/data/index.html:ro"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        test -f node_modules/.package-lock.json || npm ci --omit=dev
+        exec node --use-system-ca server.js /data/site /data/index.html
+
+volumes:
+  node_modules:
