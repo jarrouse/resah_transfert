@@ -71,7 +71,33 @@ ddev wp plugin activate <plugin-slug>
 The Composer command updates both `composer.json` and `composer.lock`, so commit both files with the change.
 
 
-### Certificate issues 
+### Local self-signed certificate
+
+For local HTTPS development, generate a self-signed certificate and private key
+in the ignored `certs/` directory:
+
+```bash
+mkdir -p certs
+openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 365 \
+  -keyout certs/privkey.pem \
+  -out certs/fullchain.pem \
+  -subj '/CN=localhost' \
+  -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
+chmod 600 certs/privkey.pem
+chmod 644 certs/fullchain.pem
+```
+
+Copy `.env.example` to `.env` and set the certificate paths:
+
+```dotenv
+TLS_CERTIFICATE_PATH=./certs/fullchain.pem
+TLS_PRIVATE_KEY_PATH=./certs/privkey.pem
+```
+
+The certificate is trusted only by clients that explicitly trust it. A browser
+will normally display a certificate warning for this self-signed certificate.
+Do not use it for production; production deployments must provide a trusted
+certificate and matching private key.
 
 > An intermediate docker image is used to provision the self sign certificate used by the company. Without it ddev fails to pull the dependencies.
 
