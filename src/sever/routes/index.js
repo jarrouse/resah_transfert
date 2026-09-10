@@ -15,6 +15,7 @@ function getCached(cacheKey, readPath) {
     let content = pageCache.get(cacheKey);
 
     if (content == null) {
+        console.log(`Caching content for key: ${cacheKey}`);
         content = fs.promises.readFile(readPath, 'utf8')
             .then(fixDomain)
             .then(fixJQueryScript)
@@ -44,7 +45,9 @@ function getPage(filePath) {
 }
 
 export async function handleIndex(req, res, next) {
-    console.log('Index requested:', req.url);
+    const d = new Date();
+    
+    console.log(d.toISOString(),'Index requested:', req.url);
 
     await getIndex()
         .then(content => {
@@ -55,6 +58,8 @@ export async function handleIndex(req, res, next) {
             console.log(err);
             next();
         });
+
+    console.log(new Date().toISOString(),'Index handling completed for (duration):', new Date().getTime()-d.getTime(), req.url);
 }
 
 export function handlePage(name){

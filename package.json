@@ -6,13 +6,14 @@
   "type": "module",
   "directories": {
     "test": "tests"
-  },  
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": " nodemon --env-file=./.env --use-system-ca -e js,html server.js ~/workspace/resah/wayback_resah/contenu/resah.fr ./public/index.html"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
+    "compression": "^1.8.1",
     "express": "^5.2.1",
     "nodemon": "^3.1.14"
   }

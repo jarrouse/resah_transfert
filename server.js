@@ -1,3 +1,4 @@
+import compression from 'compression';
 import express from 'express';
 import path from 'path';
 import { ROOT } from './src/sever/config.js';
@@ -6,21 +7,32 @@ import { handleResources,handleJQuery } from './src/sever/routes/resources.js';
 
 const app = express();
 
+app.disable('x-powered-by');
+app.use(compression());
 
-app.get("/index.html", handleIndex)
-app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'))
-app.get(/^\/.*\.(css|js)$/i, handleResources)
+const cacheControl = 'public, max-age=300, stale-while-revalidate=60';
 
-app.get(/.*\/$/, handleRoot)
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', cacheControl);
+    next();
+});
 
+app.get('/index.html', handleIndex);
+app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'));
 app.get(/.*jquery.min.js$/, handleJQuery);
+app.get(/^\/.*\.(css|js)$/i, handleResources);
+
+app.get(/.*\/$/, handleRoot);
 
 // // Serve all other static files
 app.use(express.static(ROOT, {
-    extensions: ['html'],    
+    extensions: ['html'],
+    cacheControl: false,
 }));
 
-app.use(express.static(path.join(import.meta.dirname, 'public')));
+app.use(express.static(path.join(import.meta.dirname, 'public'), {
+    cacheControl: false,
+}));
 app.use((req, res) => {
     res.status(404).send('Resource not found');
 });
