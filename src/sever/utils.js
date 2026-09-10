@@ -14,10 +14,7 @@ export function resolveWithinRoot(requestPath) {
 }
 
 export function fixDomain(content){
-    return content.replaceAll("https://www.resah.fr","")
-        .replaceAll("https://resah.fr","")
-        .replaceAll("http://resah.fr","")
-        .replaceAll("http://www.resah.fr","")
+    return content.replaceAll(/https?:\/\/(?:www\.)?resah\.fr\/?/g, "/");
 }
 
 export function transformQueryString(query) {

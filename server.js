@@ -1,16 +1,19 @@
 import express from 'express';
 import path from 'path';
 import { ROOT } from './src/sever/config.js';
-import { handleIndex, handleRoot } from './src/sever/routes/index.js';
-import { handleResources } from './src/sever/routes/resources.js';
+import { handleIndex, handleRoot, handlePage } from './src/sever/routes/index.js';
+import { handleResources,handleJQuery } from './src/sever/routes/resources.js';
 
 const app = express();
 
+
 app.get("/index.html", handleIndex)
+app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'))
+app.get(/^\/.*\.(css|js)$/i, handleResources)
 
-app.get(/^\/.*\.(css|js)$/i, handleResources);
+app.get(/.*\/$/, handleRoot)
 
-app.get(/.*\/$/, handleRoot);
+app.get(/.*jquery.min.js$/, handleJQuery);
 
 // // Serve all other static files
 app.use(express.static(ROOT, {
