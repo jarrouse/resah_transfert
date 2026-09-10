@@ -27,6 +27,9 @@ web/.htaccess
 .env.*
 !.env.example
 
+# Local TLS certificate and private key
+certs/
+
 # Composer
 /vendor
 auth.json
