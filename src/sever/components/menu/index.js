@@ -16,7 +16,7 @@ async function getTemplate() {
 
 export async function replaceMenu(html) {
     const $ = cheerio.load(html);
-    const menus = $('nav.e-n-menu[data-widget-number="125"]');
+    const menus = $('nav.e-n-menu[data-widget-number="125"], nav.e-n-menu[data-widget-number="211"]');
 
     if (menus.length === 0) {
         return html;
