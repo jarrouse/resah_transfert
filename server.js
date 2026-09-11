@@ -1,5 +1,6 @@
 import compression from 'compression';
 import express from 'express';
+import helmet from 'helmet';
 import path from 'path';
 import { ROOT } from './src/sever/config.js';
 import { handleIndex, handleRoot, handlePage } from './src/sever/routes/index.js';
@@ -9,7 +10,16 @@ const app = express();
 
 app.disable('x-powered-by');
 app.use(compression());
-
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https:', 'http:'],
+            'script-src-attr': ["'unsafe-inline'"],
+            'img-src': ["'self'", 'data:', 'https:', 'http:', 'blob:'],
+        },
+    },
+}));
 const cacheControl = 'public, max-age=300, stale-while-revalidate=60';
 
 app.use((req, res, next) => {
