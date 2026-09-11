@@ -38,7 +38,7 @@ app.use((req, res) => {
     res.status(404).send('Resource not found');
 });
 
-const server = app.listen(3000, () => {
+const server = app.listen(3000, '0.0.0.0', () => {
     console.log('Server running on port 3000');
 });
 
