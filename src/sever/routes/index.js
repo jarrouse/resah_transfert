@@ -53,7 +53,7 @@ export async function handleIndex(req, res, next) {
 
     await getIndex()
         .then(content => {
-            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.send(content);
         })
         .catch(err => {
@@ -69,7 +69,7 @@ export function handlePage(name){
         .then(content => {
 
             console.log('Page requested:', name);
-            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.send(content);
         })
         .catch(err => {
@@ -93,7 +93,7 @@ export async function handleRoot(req, res, next) {
         const filePath = resolveWithinRoot(req.path);
         await getPage(filePath)
             .then(content => {
-                res.setHeader('Content-Type', 'text/html');
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
                 res.send(content);
             })
             .catch(err => {
