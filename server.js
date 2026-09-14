@@ -28,6 +28,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/index.html', handleIndex);
+app.get(/\/mentions-legales\//, handlePage('mentions-legales'));
 app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'));
 app.get(/\/eco-conception-de-la-prise-en-charge-des-patients\//, handlePage('eco-conception-de-la-prise-en-charge-des-patients'));
 app.get(/.*jquery.min.js$/, handleJQuery);
