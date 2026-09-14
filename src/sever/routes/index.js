@@ -16,21 +16,6 @@ function fixJQueryScript(content){
 async function getCached(cacheKey, readPath) {
     const stat = await fs.promises.stat(readPath);
     const cached = pageCache.get(cacheKey);
-
-    if (content == null) {
-        console.log(`Caching content for key: ${cacheKey}`);
-        content = fs.promises.readFile(readPath, 'utf8')
-            .then(fixDomain)
-            .then(fixJQueryScript)
-            .then(replaceMenu)
-            .then(replaceFooter)
-            // avoid caching a rejected read
-            .catch(err => {
-                pageCache.delete(cacheKey);
-                throw err;
-            });
-            
-        pageCache.set(cacheKey, content);
     // re-read from disk whenever the file has changed since it was cached
     if (cached != null && cached.mtimeMs === stat.mtimeMs) {
         return cached.content;
@@ -43,7 +28,6 @@ async function getCached(cacheKey, readPath) {
         .then(replaceMenu)
         .then(replaceFooter)
         .then(replaceHeadline)
-
         // avoid caching a rejected read
         .catch(err => {
             pageCache.delete(cacheKey);
