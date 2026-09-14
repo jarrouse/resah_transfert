@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import * as cheerio from 'cheerio';
 
 const TEMPLATE_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'template.html');
-const STYLESHEET_HREF = '/wp-content/litespeed/ucss/00d96246ce2287c071054b86386b8e5f.css?ver=59c0a';
 
 let templateCache;
 

@@ -209,14 +209,28 @@ ddev launch
 
 #### Local archive server
 
+1. Using npm script
+
+``` bash
+npm run dev
+```
+
+2. Manual command
+
 To start a local server serving the archive resources run the followin command :  
 
 ``` bash
-node  node --env-file=./.env --use-system-ca server.js <PATH_LOCAL_WAYBACK_DIRECTORY>
+node --env-file=./.env --use-system-ca server.js <PATH_LOCAL_WAYBACK_DIRECTORY>
 ```
 
 The tool also accept the path to the `index.html` file :
 
 ``` bash
-node  node --env-file=./.env --use-system-ca server.js <PATH_LOCAL_WAYBACK_DIRECTORY> <PATH_TO_INDEX_HTML>
+node --env-file=./.env --use-system-ca server.js <PATH_LOCAL_WAYBACK_DIRECTORY> <PATH_TO_INDEX_HTML>
 ```
+
+> note :
+> Parameters are optionals. Path are also read from environment variables.
+> Cf .env.example
+>
+> Important path must be absolute

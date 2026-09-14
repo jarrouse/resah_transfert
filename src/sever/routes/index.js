@@ -3,6 +3,7 @@ import path from 'path';
 import { INDEX_PATH } from '../config.js';
 import { fixDomain, resolveWithinRoot, readFile } from '../utils.js';
 import replaceMenu from '../components/menu/index.js';
+import { replaceFooter } from '../components/footer/index.js';
 
 /** @type {Map<string, Promise<string>>} */
 const pageCache = new Map();
@@ -20,6 +21,7 @@ function getCached(cacheKey, readPath) {
             .then(fixDomain)
             .then(fixJQueryScript)
             .then(replaceMenu)
+            .then(replaceFooter)
             // avoid caching a rejected read
             .catch(err => {
                 pageCache.delete(cacheKey);
