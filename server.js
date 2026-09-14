@@ -20,7 +20,8 @@ app.use(helmet({
         },
     },
 }));
-const cacheControl = 'public, max-age=300, stale-while-revalidate=60';
+// no-store avoids the browser reusing a stale page while pages are being edited locally
+const cacheControl = 'no-store';
 
 app.use((req, res, next) => {
     res.setHeader('Cache-Control', cacheControl);
@@ -30,6 +31,11 @@ app.use((req, res, next) => {
 app.get('/index.html', handleIndex);
 app.get(/\/mentions-legales\//, handlePage('mentions-legales'));
 app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'));
+app.get(/\/centrale-dachat\//, handlePage('centrale-dachat'));
+app.get(/\/centre-de-ressources-et-d-expertise\//, handlePage('centre-de-ressources-et-d-expertise'));
+app.get(/\/mentions-legales\//, handlePage('mentions-legales'));
+app.get(/\/donnees-personnelles\//, handlePage('donnees-personnelles'));
+app.get(/\/politique-de-cookies-ue\//, handlePage('politique-de-cookies-ue'));
 app.get(/\/eco-conception-de-la-prise-en-charge-des-patients\//, handlePage('eco-conception-de-la-prise-en-charge-des-patients'));
 app.get(/.*jquery.min.js$/, handleJQuery);
 app.get(/^\/.*\.(css|js)$/i, handleResources);

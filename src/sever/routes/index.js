@@ -6,15 +6,16 @@ import replaceMenu from '../components/menu/index.js';
 import { replaceFooter } from '../components/footer/index.js';
 import { replaceHeadline } from '../components/headline/index.js';
 
-/** @type {Map<string, Promise<string>>} */
+/** @type {Map<string, { mtimeMs: number, content: Promise<string> }>} */
 const pageCache = new Map();
 
 function fixJQueryScript(content){
     return content.replace(/<script[^>]*data-src=["']([^"']*jquery[^"']*)["'][^>]*><\/script>/gi, '<script src="/public/js/jquery.min.js" type="text/javascript"></script>');
 }
 
-function getCached(cacheKey, readPath) {
-    let content = pageCache.get(cacheKey);
+async function getCached(cacheKey, readPath) {
+    const stat = await fs.promises.stat(readPath);
+    const cached = pageCache.get(cacheKey);
 
     if (content == null) {
         console.log(`Caching content for key: ${cacheKey}`);
@@ -23,7 +24,6 @@ function getCached(cacheKey, readPath) {
             .then(fixJQueryScript)
             .then(replaceMenu)
             .then(replaceFooter)
-            .then(replaceHeadline)
             // avoid caching a rejected read
             .catch(err => {
                 pageCache.delete(cacheKey);
@@ -31,7 +31,26 @@ function getCached(cacheKey, readPath) {
             });
             
         pageCache.set(cacheKey, content);
+    // re-read from disk whenever the file has changed since it was cached
+    if (cached != null && cached.mtimeMs === stat.mtimeMs) {
+        return cached.content;
     }
+
+    console.log(`Caching content for key: ${cacheKey}`);
+    const content = fs.promises.readFile(readPath, 'utf8')
+        .then(fixDomain)
+        .then(fixJQueryScript)
+        .then(replaceMenu)
+        .then(replaceFooter)
+        .then(replaceHeadline)
+
+        // avoid caching a rejected read
+        .catch(err => {
+            pageCache.delete(cacheKey);
+            throw err;
+        });
+
+    pageCache.set(cacheKey, { mtimeMs: stat.mtimeMs, content });
 
     return content;
 }
