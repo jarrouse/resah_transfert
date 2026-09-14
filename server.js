@@ -31,6 +31,8 @@ app.use((req, res, next) => {
 app.get('/index.html', handleIndex);
 app.get(/\/mentions-legales\//, handlePage('mentions-legales'));
 app.get(/\/qui-sommes-nous\//, handlePage('qui-sommes-nous'));
+app.get(/\/contact\//, handlePage('contact'));
+app.get(/\/nous-contacter\//, handlePage('nous-contacter'));
 app.get(/\/centrale-dachat\//, handlePage('centrale-dachat'));
 app.get(/\/centre-de-ressources-et-d-expertise\//, handlePage('centre-de-ressources-et-d-expertise'));
 app.get(/\/mentions-legales\//, handlePage('mentions-legales'));
