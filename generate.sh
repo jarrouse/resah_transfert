@@ -1,6 +1,16 @@
-rm -Rf static-export
+#!/bin/bash
 
-npm run dev
+set -m
+
+rm -Rf static-export
+rm resah.zip
+npm run dev 2> /dev/null &
+dev_pid=$!
+trap 'kill -- -"$dev_pid" 2>/dev/null' EXIT
+
+until curl -s -o /dev/null http://localhost:3000/; do
+  sleep 1
+done
 
 wget --mirror --page-requisites --adjust-extension --convert-links --no-host-directories --directory-prefix=static-export http://localhost:3000/
 
@@ -51,7 +61,77 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-cp -R "$1" static-export/wp-content/uploads
+mkdir -p static-export/wp-content/uploads
+
+# base image names referenced by the site, extracted from tmp/http-requests.json
+missing_images=(
+  1.3.png
+  2.1.png
+  2.3.png
+  3.1.png
+  3.2.png
+  3.3.png
+  4.1.png
+  4.3.png
+  5.1.png
+  5.3.png
+  5fnmwej4taa.jpg
+  "Nous rejoindre.webp"
+  "Toujours %C3%A0 votre %C3%A9coute.jpeg"
+  abgavhjxwdq.jpg
+  achat-logistique-info-logo.png
+  achat-logistique.info.jpg
+  actualite-arriere-plan.jpg
+  autoevaluation-vert.svg
+  blog-orange.svg
+  certificaiton-vert.svg
+  chaine-rose.svg
+  chevron-down.svg
+  espace-acheteur-blanc-fond-transparent-v2-768x147.png.webp
+  espace-acheteur.jpg
+  espace-formation-blanc-fond-transparent-v2-768x147.png.webp
+  espace-fournisseur-blanc-fond-transparent-v2-768x147.png.webp
+  event-1.jpg
+  guide-orange.svg
+  jimmy-chang-act8ycszpde-unsplash.jpg
+  journaliste-orange.svg
+  label-rfar2.png
+  logo-ehppa.jpg
+  logo-label-rfar.jpeg
+  loupe-rose.svg
+  portefeuille.png
+  projets-ensemble-rose.svg
+  qckxruozjrg.jpg
+  resah-eco-partenaires-insti.jpg
+  resah-eco-partenaires.jpg
+  resah-favicon.png
+  resah-icone-feuille-rose.svg
+  resah-icone-fusee-bleu.svg
+  resah_icone_agents_2.png
+  resah_icone_chrono-1.png
+  resah_icone_echanges.png
+  resah_icone_familles_achat.png
+  resah_icone_foule.png
+  resah_icone_foule2.png
+  resah_icone_interface.png
+  resah_icone_marches.png
+  resah_icone_poignee_mains.png
+  resah_icone_reseau_2.png
+  resah_logoblanc_rvb.png
+  resah_logobleu_rvb_trans.png
+  satisfaction-vert.svg
+)
+
+# for each base name, copy the exact file plus any -WIDTHxHEIGHT/-scaled size variant
+shopt -s nullglob
+for image in "${missing_images[@]}"; do
+  name="${image%.*}"
+  ext="${image##*.}"
+  for match in "$1/$image" "$1/$name"-[0-9]*x[0-9]*."$ext" "$1/$name-scaled.$ext"; do
+    [ -f "$match" ] && cp "$match" static-export/wp-content/uploads/
+  done
+done
+shopt -u nullglob
 cp -R public/assets/ static-export/assets
 
 zip -r resah.zip static-export
