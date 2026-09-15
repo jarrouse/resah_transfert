@@ -24,16 +24,23 @@ export async function handleResources(req, res, next) {
 
     try {
         const filePath = resolveWithinRoot(req.path);
+        const queryKey = new URLSearchParams(req.query).toString();
+        const cacheKey = `${filePath}?${queryKey}`;
         // const realPath = await fs.promises.realpath(filePath + queryString);
-        if(!lookupMap.has(filePath)) {
+        if(!lookupMap.has(cacheKey)) {
             const file = await readFile(filePath , 'utf8', req.query).then(fixDomain);
-            lookupMap.set(filePath,  file);
+            lookupMap.set(cacheKey,  file);
         }
-        const content = lookupMap.get(filePath);
+        const content = lookupMap.get(cacheKey);
 
         res.setHeader('Content-Type', req.path.endsWith('.css') ? 'text/css' : 'application/javascript');
         res.send(content);
     } catch (err) { 
+        // Missing archived assets are expected in local snapshots: fallback to next middleware/404.
+        if (err?.code === 'ENOENT' || String(err?.message ?? '').startsWith('File not found:')) {
+            return next();
+        }
+
         console.log(err)
         next();
     }

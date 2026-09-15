@@ -92,7 +92,7 @@ export async function handleRoot(req, res, next) {
     console.log('Root requested:', req.url);
 
     //match root URL for the current hostname with port if there is one
-    if(req.url === '/') {
+    if(req.path === '/') {
         await handleIndex(req, res, next);
     } else {
         const filePath = resolveWithinRoot(req.path);

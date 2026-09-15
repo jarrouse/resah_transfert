@@ -31,18 +31,33 @@ export function transformQueryString(query) {
 
 export async function readFile(filePath, encoding, query) {
     const queryString = transformQueryString(query);
+    const directPath = path.join(filePath, queryString ?? '', 'index.html');
     
     try{
-        return await fs.promises.readFile(path.join(filePath, queryString ?? '', 'index.html'), encoding)
+        return await fs.promises.readFile(directPath, encoding)
     }catch(err) {
-        // read all the file matching the filepath in the parent directory
+        // Fallback: scan sibling folders that start with the same basename.
         const dir = path.dirname(filePath);
-        const files = await fs.promises.readdir(dir);
+        let files;
+
+        try {
+            files = await fs.promises.readdir(dir);
+        } catch (dirErr) {
+            if (dirErr?.code === 'ENOENT') {
+                throw new Error(`File not found: ${filePath}`);
+            }
+
+            throw dirErr;
+        }
 
         for (const file of files) {
 
             if (file.startsWith(path.basename(filePath))) {
-                return await fs.promises.readFile(path.join(dir, file, 'index.html'), encoding);
+                try {
+                    return await fs.promises.readFile(path.join(dir, file, 'index.html'), encoding);
+                } catch {
+                    // Keep scanning sibling candidates.
+                }
             }
         }
     };
