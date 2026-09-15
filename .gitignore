@@ -1,6 +1,9 @@
 # Tooling
 
 node_modules/
+static-export/
+
+*.zip
 
 # Application
 web/app/plugins/*

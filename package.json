@@ -9,7 +9,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --use-system-ca -e js,html server.js \"C:\\Users\\lfougera\\OneDrive - Capgemini\\Documents\\IA Factory\\RESAH\\wayback_resah\\contenu\\resah.fr\" \"./public/index.html\""
+    "dev": "nodemon --use-system-ca --env-file=.env -e js,html --ignore static-export/ server.js",
+    "preview": "npx serve static-export",
+    "generate": "./generate.sh"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

@@ -234,3 +234,21 @@ node --env-file=./.env --use-system-ca server.js <PATH_LOCAL_WAYBACK_DIRECTORY> 
 > Cf .env.example
 >
 > Important path must be absolute
+
+#### Static export for Azure Static Web Apps
+
+With the local archive server running, mirror it into a static site that can be hosted on Azure Static Web Apps without any server:
+
+``` bash
+wget --mirror --page-requisites --adjust-extension --convert-links --no-host-directories --directory-prefix=static-export http://localhost:3000/
+```
+
+`--no-host-directories` makes wget write files directly into the output directory (no `localhost:3000/` wrapper folder), so always set `--directory-prefix` (`-P`) to a dedicated directory such as `static-export/`, otherwise the mirrored files spill into whatever directory you run the command from.
+
+Use `generate.sh` to run this mirror, strip resources that should not ship (duplicate index files, unwanted top-level folders), and copy an additional folder (for example static assets not served by the archive server) into the export:
+
+``` bash
+./generate.sh <PATH_TO_FOLDER_TO_COPY>
+```
+
+The script fails if `<PATH_TO_FOLDER_TO_COPY>` is not provided. The `static-export/` output directory is gitignored.
