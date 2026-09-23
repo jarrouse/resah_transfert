@@ -2,6 +2,15 @@
 
 set -m
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$script_dir/.env" ]; then
+  set -a
+  source "$script_dir/.env"
+  set +a
+fi
+
+target="${1:-$ROOT}"
+
 rm -Rf static-export
 rm resah.zip
 npm run dev 2> /dev/null &
@@ -56,8 +65,8 @@ rm -Rf static-export/venez-rencontrer-les-equipes-du-resah-a-santexpo-du-21-au-2
 
 find static-export -type f -name 'index.html?*' -delete
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <folder-to-copy>" >&2
+if [ -z "$target" ]; then
+  echo "Usage: $0 <folder-to-copy> (or set ROOT in .env)" >&2
   exit 1
 fi
 
@@ -127,7 +136,7 @@ shopt -s nullglob
 for image in "${missing_images[@]}"; do
   name="${image%.*}"
   ext="${image##*.}"
-  for match in "$1/$image" "$1/$name"-[0-9]*x[0-9]*."$ext" "$1/$name-scaled.$ext"; do
+  for match in "$target/$image" "$target/$name"-[0-9]*x[0-9]*."$ext" "$target/$name-scaled.$ext"; do
     [ -f "$match" ] && cp "$match" static-export/wp-content/uploads/
   done
 done
