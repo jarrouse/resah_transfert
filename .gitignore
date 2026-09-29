@@ -44,3 +44,7 @@ phpunit.xml
 
 # WP-CLI
 wp-cli.local.yml
+logGenerate.txt
+logRunDev.txt
+*.Identifier
+

@@ -13,7 +13,7 @@ target="${1:-$ROOT}"
 
 rm -Rf static-export
 rm resah.zip
-npm run dev 2> /dev/null &
+npm run dev > logRunDev.txt &
 dev_pid=$!
 trap 'kill -- -"$dev_pid" 2>/dev/null' EXIT
 
@@ -136,7 +136,7 @@ shopt -s nullglob
 for image in "${missing_images[@]}"; do
   name="${image%.*}"
   ext="${image##*.}"
-  for match in "$target/$image" "$target/$name"-[0-9]*x[0-9]*."$ext" "$target/$name-scaled.$ext"; do
+  for match in "$target/wp-content/uploads/$image" "$target/wp-content/uploads/$name"-[0-9]*x[0-9]*."$ext" "$target/wp-content/uploads/$name-scaled.$ext"; do
     [ -f "$match" ] && cp "$match" static-export/wp-content/uploads/
   done
 done
