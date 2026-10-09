@@ -40,6 +40,7 @@ app.get(/\/donnees-personnelles\//, handlePage('donnees-personnelles'));
 app.get(/\/politique-de-cookies-ue\//, handlePage('politique-de-cookies-ue'));
 app.get(/\/eco-conception-de-la-prise-en-charge-des-patients\//, handlePage('eco-conception-de-la-prise-en-charge-des-patients'));
 app.get(/\/participez-a-la-15e-edition-des-journees-achat-logistique\//, handlePage('participez-a-la-15e-edition-des-journees-achat-logistique'));
+app.get(/\/Agora\//, handlePage('Agora'));
 app.get(/.*jquery.min.js$/, handleJQuery);
 app.get(/^\/.*\.(css|js)$/i, handleResources);
 
